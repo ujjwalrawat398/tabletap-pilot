@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 33% 98%;
+    --foreground: 24 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 20% 12%;
+    --primary: 16 81% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 20% 94%;
+    --secondary-foreground: 24 20% 18%;
+    --muted: 30 16% 94%;
+    --muted-foreground: 24 8% 40%;
+    --accent: 16 81% 96%;
+    --accent-foreground: 16 81% 32%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 38%;
+    --warning: 38 92% 45%;
+    --border: 30 14% 88%;
+    --input: 30 14% 84%;
+    --ring: 16 81% 53%;
+    --radius: 0.9rem;
+  }
+
+  .dark {
+    --background: 24 18% 8%;
+    --foreground: 30 20% 96%;
+    --card: 24 16% 12%;
+    --card-foreground: 30 20% 96%;
+    --primary: 16 81% 56%;
+    --primary-foreground: 20 30% 8%;
+    --secondary: 24 12% 18%;
+    --secondary-foreground: 30 20% 94%;
+    --muted: 24 12% 18%;
+    --muted-foreground: 30 8% 66%;
+    --accent: 16 40% 20%;
+    --accent-foreground: 16 90% 86%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 48% 44%;
+    --warning: 38 88% 55%;
+    --border: 24 12% 22%;
+    --input: 24 12% 26%;
+    --ring: 16 81% 56%;
+  }
+
+  * { @apply border-border; }
+
+  html { -webkit-tap-highlight-color: transparent; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Devanagari',
+      'Helvetica Neue', Arial, sans-serif;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* minimum thumb-friendly tap target everywhere by default */
+  button, a[role='button'], [role='button'] { touch-action: manipulation; }
+
+  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
+}
+
+@layer components {
+  .tap {
+    @apply min-h-[44px] min-w-[44px] inline-flex items-center justify-center;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(90deg, transparent, hsl(var(--background) / 0.55), transparent);
+  }
+
+  .staff-card {
+    @apply rounded-2xl border-2 border-border bg-card p-4 shadow-soft;
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
