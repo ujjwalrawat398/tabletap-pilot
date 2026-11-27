@@ -1,6 +1,18 @@
 import { chromium } from 'playwright';
-const code = process.argv[2];
 const base = 'http://127.0.0.1:3000';
+
+// Deterministic start: wipe leftover sessions/codes from earlier suites and
+// reseed, so the waiter board holds only this run's Table 1 code. The seed
+// response carries the current demo table link code.
+await fetch(`${base}/api/demo/reset`, { method: 'POST' }).catch(() => {});
+const seed = await fetch(`${base}/api/demo/seed`, { method: 'POST' })
+  .then((r) => r.json())
+  .catch(() => null);
+const code = seed?.data?.demoTable?.code ?? process.argv[2];
+if (!code) {
+  console.error('No demo table code: pass one as an argument or run against a demo server.');
+  process.exit(1);
+}
 const browser = await chromium.launch();
 
 const guest = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
@@ -34,9 +46,21 @@ await sp.waitForTimeout(1500);
 const boardWithCode = await sp.locator('body').innerText();
 console.log('waiter sees the code card:', /Table codes/i.test(boardWithCode));
 // only a LIVE card is a code a waiter would read out (dead cards stay on the board
-// for five minutes so staff can see why guests are still waiting)
-const codeChip = sp.locator('[data-code-state="live"][aria-label^="code "]').first();
-const spoken = (await codeChip.getAttribute('aria-label')) ?? '';
+// for five minutes so staff can see why guests are still waiting). The guest in
+// this flow sits at Table 1, so read that table's code — other tables may hold
+// live codes of their own.
+const spoken = await sp.evaluate(() => {
+  const chips = [...document.querySelectorAll('[data-code-state="live"][aria-label^="code "]')];
+  const mine = chips.find((chip) => {
+    let node = chip;
+    for (let i = 0; i < 8 && node; i++) {
+      if (/Table 1\b/.test(node.textContent ?? '')) return true;
+      node = node.parentElement;
+    }
+    return false;
+  });
+  return (mine ?? chips[0])?.getAttribute('aria-label') ?? '';
+});
 const tableCode = spoken.replace('code ', '').replace(/\s+/g, '');
 console.log('code read from the board:', tableCode.length, 'digits —', tableCode ? 'ok' : 'missing');
 await sp.screenshot({ path: '/tmp/shot-waiter-code.png', fullPage: false });
@@ -72,7 +96,7 @@ await page.waitForTimeout(1500);
 await page.goto(`${base}/t/${code}/status`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 const statusText = await page.locator('body').innerText();
-console.log('status page shows waiting:', /Waiting for waiter/i.test(statusText));
+console.log('status page shows the order:', /Batch #1/i.test(statusText));
 await page.screenshot({ path: '/tmp/shot-status.png', fullPage: true });
 
 // 5. waiter confirms
@@ -96,11 +120,10 @@ await kp.fill('#password', 'Demo@1234');
 await Promise.all([kp.waitForURL('**/kitchen'), kp.click('button[type=submit]')]);
 await kp.waitForTimeout(1200);
 const kitchenText = await kp.locator('body').innerText();
-console.log('kitchen sees confirmed order:', /Start preparing/i.test(kitchenText));
+console.log('kitchen sees confirmed order:', /Done/i.test(kitchenText));
 await kp.screenshot({ path: '/tmp/shot-kitchen.png', fullPage: false });
-await kp.getByRole('button', { name: /Start preparing/i }).first().click();
-await kp.waitForTimeout(1200);
-await kp.getByRole('button', { name: /Mark ready/i }).first().click();
+// The kitchen board has one action per order: Done (food is made -> Ready).
+await kp.getByRole('button', { name: /^Done$/i }).first().click();
 await kp.waitForTimeout(1200);
 
 // 6. guest sees ready
