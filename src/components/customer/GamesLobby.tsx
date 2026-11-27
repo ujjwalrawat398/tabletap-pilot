@@ -209,7 +209,7 @@ export function GamesLobby({
               </span>
               <div className="flex-1">
                 <p className="font-bold">{t.wholeRestaurant}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                   {!game
                     ? 'No game right now · the admin starts it'
                     : game.joined

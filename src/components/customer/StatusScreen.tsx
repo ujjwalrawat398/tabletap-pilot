@@ -8,7 +8,7 @@ import { money, timeAgo } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, BellRing, Receipt, UtensilsCrossed } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/toast';
 
 export function StatusScreen() {
@@ -16,6 +16,14 @@ export function StatusScreen() {
   const { tableCode, orders, callWaiter, cart, session } = useCustomer();
   const { push } = useToast();
   const [busy, setBusy] = useState<string | null>(null);
+  // 0 until mounted: the first render must match the server's, so the
+  // "placed Xs" text starts at 0s and ticks up after hydration.
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const newestFirst = [...orders].sort((a, b) => b.batch_no - a.batch_no);
 
@@ -69,7 +77,7 @@ export function StatusScreen() {
               <div>
                 <p className="text-sm font-bold">Batch #{order.batch_no}</p>
                 <p className="text-xs text-muted-foreground">
-                  placed {timeAgo(order.created_at)} ·{' '}
+                  placed {timeAgo(order.created_at, now || new Date(order.created_at).getTime())} ·{' '}
                   {order.items.reduce((s, i) => s + i.qty, 0)}{' '}
                   {order.items.reduce((s, i) => s + i.qty, 0) === 1 ? 'item' : 'items'}
                 </p>
