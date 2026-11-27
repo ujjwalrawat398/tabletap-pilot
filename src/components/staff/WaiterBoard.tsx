@@ -130,7 +130,9 @@ export function WaiterBoard({
 }) {
   const { push } = useToast();
   const [data, setData] = React.useState<BoardData>(initial);
-  const [now, setNow] = React.useState(Date.now());
+  // 0 until mounted so the first client render matches the server's
+  // (timeAgo with now=0 is a deterministic "0s"); the effect sets real time.
+  const [now, setNow] = React.useState(0);
   const [selected, setSelected] = React.useState<TableCard | null>(null);
   const [detail, setDetail] = React.useState<TableDetail | null>(null);
   const [detailLoading, setDetailLoading] = React.useState(false);
@@ -178,6 +180,7 @@ export function WaiterBoard({
   });
 
   React.useEffect(() => {
+    setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);

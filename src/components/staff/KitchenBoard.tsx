@@ -29,7 +29,9 @@ export function KitchenBoard({
 }) {
   const { push } = useToast();
   const [orders, setOrders] = React.useState<OrderView[]>(initial.orders);
-  const [now, setNow] = React.useState(Date.now());
+  // 0 until mounted so the first client render matches the server's;
+  // the effect below sets real time immediately after hydration.
+  const [now, setNow] = React.useState(0);
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
@@ -60,6 +62,7 @@ export function KitchenBoard({
   });
 
   React.useEffect(() => {
+    setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);

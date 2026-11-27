@@ -614,7 +614,9 @@ async function main() {
   const deadLogin = await login('qa.waiter@spiceroute.test', 'QaPass@1234');
   check('a deactivated account cannot sign in', deadLogin.res.status === 401, `status ${deadLogin.res.status}`);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Reports bucket by the restaurant timezone (Asia/Kolkata), not UTC —
+  // a UTC date misses today's orders between 18:30 UTC and midnight UTC.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   const report = await call('GET', `/api/admin/reports?from=${today}&to=${today}`, { cookies: admin.jar });
   check('sales report answers', report.json.ok === true, `${report.json.data?.totalOrders} orders`);
   check('revenue adds up', Number(report.json.data?.totalRevenue) > 0, `${report.json.data?.totalRevenue}`);

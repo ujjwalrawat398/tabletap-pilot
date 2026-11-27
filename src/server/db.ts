@@ -125,9 +125,19 @@ async function getPool(): Promise<PgPool> {
     global.__tabletap_pg = new Pool({
       connectionString: env.DATABASE_URL,
       max: 8,
+      // Fail fast instead of hanging a request when the database is
+      // unreachable (paused project, wrong host): the health probe and the
+      // landing page must answer, not spin until the platform timeout.
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
       ssl: /localhost|127\.0\.0\.1/.test(env.DATABASE_URL ?? '')
         ? undefined
         : { rejectUnauthorized: false },
+    });
+    // An idle client erroring (database restart, pooler drop) must not crash
+    // the process via an unhandled 'error' event on the pool.
+    global.__tabletap_pg.on('error', (err) => {
+      console.error('[db] idle pool client error:', err instanceof Error ? err.message : err);
     });
   }
   return global.__tabletap_pg;
@@ -197,6 +207,9 @@ export async function dbHealth() {
     const row = await db.one<{ now: string }>('select now()::text as now');
     return { ok: true as const, mode: dbMode, now: row?.now };
   } catch (err) {
+    // Log the real cause server-side (visible in platform logs); the public
+    // health response stays generic.
+    console.error('[db] health check failed:', err instanceof Error ? err.message : err);
     return { ok: false as const, mode: dbMode, error: String(err) };
   }
 }

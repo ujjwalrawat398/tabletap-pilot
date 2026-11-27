@@ -2,7 +2,6 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 import { housekeeping } from '@/server/repos/events';
 import { safeEqual } from '@/lib/crypto';
-import { isProd } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,13 +33,14 @@ export async function GET(req: Request) {
     '';
 
   if (!secret) {
-    // Demo / local mode keeps the scheduler usable; production fails closed.
-    if (isProd) {
-      return NextResponse.json(
-        { ok: false, error: 'CRON_SECRET is not configured on this deployment.' },
-        { status: 503 },
-      );
-    }
+    // Fail closed everywhere: an unconfigured deployment must not expose an
+    // open housekeeping endpoint. Local dev gets a secret from
+    // scripts/ensure-secret.mjs (npm run dev), so this only fires when the
+    // server was started without any setup.
+    return NextResponse.json(
+      { ok: false, error: 'CRON_SECRET is not configured on this deployment.' },
+      { status: 503 },
+    );
   } else if (!provided || !safeEqual(provided, secret)) {
     return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
   }

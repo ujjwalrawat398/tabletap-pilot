@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "qr:pdf": "node scripts/generate-qr-pdf.mjs",
     "seed:staff": "node scripts/seed-staff.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:security": "node scripts/security-test.mjs",
     "test:e2e": "node flow.mjs",

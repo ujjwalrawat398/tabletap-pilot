@@ -73,7 +73,7 @@ export function RestaurantGameBanner() {
       <button type="button" onClick={join} disabled={busy || game.tableFull} className={`${strip} w-[calc(100%-2rem)] disabled:opacity-70`}>
         <Gamepad2 className="h-5 w-5 text-primary" aria-hidden />
         <div className="flex-1">
-          <p className="text-sm font-semibold">Restaurant game · starts in {mmss(secs(game.startsAt))}</p>
+          <p className="text-sm font-semibold" suppressHydrationWarning>Restaurant game · starts in {mmss(secs(game.startsAt))}</p>
           <p className="text-xs text-muted-foreground">
             {game.tableFull ? 'Your table already has 2 players' : 'Win a prize for your table · tap to join'}
           </p>
@@ -88,7 +88,7 @@ export function RestaurantGameBanner() {
     <Link href={`/t/${tableCode}/games/round/${game.id}`} className={strip}>
       <Gamepad2 className="h-5 w-5 text-primary" aria-hidden />
       <div className="flex-1">
-        <p className="text-sm font-semibold">
+        <p className="text-sm font-semibold" suppressHydrationWarning>
           {game.phase === 'rules' ? `Game starts in ${mmss(secs(game.startsAt))}` : 'Restaurant game in progress'}
         </p>
         <p className="text-xs text-muted-foreground">Tap to go back to it</p>
