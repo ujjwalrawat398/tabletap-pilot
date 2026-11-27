@@ -74,8 +74,9 @@ export function DemoLauncher({ dbOk, dbMode }: { dbOk: boolean; dbMode: string }
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
         <p className="font-semibold text-destructive">The database is not ready</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Start the app with <code className="rounded bg-secondary px-1">npm run dev</code> and reload.
-          Migrations and the demo data are created on first boot.
+          The database connection failed. Check that the database is running and DATABASE_URL is
+          set correctly, then reload. Locally, <code className="rounded bg-secondary px-1">npm run dev</code>{' '}
+          creates the demo database on first boot.
         </p>
         <Button size="sm" variant="outline" className="mt-3" onClick={load}>
           Retry
